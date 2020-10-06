@@ -2,10 +2,10 @@
 #Initialize default properties
 $p = $person | ConvertFrom-Json;
 $m = $manager | ConvertFrom-Json;
-$aRef = $accountReference | ConvertFrom-Json;
-$mRef = $managerAccountReference | ConvertFrom-Json;
 $success = $False;
-$auditMessage = $p.DisplayName;
+$auditMessage = "for person " + $p.DisplayName;
+
+$account_guid = $p.Accounts.MicrosoftAzureADSizanl.userPrincipalName
 
 #Change mapping here
 $account = [PSCustomObject]@{
@@ -15,6 +15,7 @@ $account = [PSCustomObject]@{
 $User = "<Beaufort user>"
 $CurrentDate = Get-Date -Format ddMMyyyy
 $DatForFile = Get-Date -Format ddMMyyy_Hmm
+$ProductionTypeDate = Get-Date -Format MMyyyy
 $OutFile = "C:\DPIA100_Export_HelloID\dpia100_siza_helloid_" + $DatForFile + ".txt"
 
 #Building fixed length fields
@@ -23,7 +24,8 @@ $Indication= "V $(" " * 1)".Substring(0,1) # V for Variable S for Stam
 $ExportDate = "$CurrentDate $(" " * 11)".Substring(0,11)
 $StartDate = "$CurrentDate $(" " * 11)".Substring(0,11)
 $creationUser = "$User $(" " * 16)".Substring(0,16)
-
+$ProductionType = "NOR$ProductionTypeDate $(" " * 9)".Substring(0,9)
+$Spaces = "$(" " * 30)".Substring(0,30)
 
 #Input Variables from HelloID
 $userExternalID = $p.externalId
@@ -32,13 +34,13 @@ $Object_id = "$userExternalID $(" " * 50)".Substring(0,50)
 $Rubriekscode = "P01035 $(" " * 6)".Substring(0,6)
 $Value = "$userMail $(" " * 50)".Substring(0,50) 
 
-if(-Not($dryRun -eq $False)) {
+if(-Not($dryRun -eq $True)) {
     #Export DPIA100
     Try{
-        $output = "$Processcode" + "$Rubriekscode" + "$Object_id" + "$Indication" + "$ExportDate" + "$creationUser" + "$Value" + "$StartDate"
+        $output = "$Processcode" + "$Rubriekscode" + "$Object_id" + "$Indication" + "$ExportDate" + "$creationUser" + "$Value" + "$StartDate" + "$Spaces" + "$ProductionType"
         Write-Output $output | Out-File $OutFile;    
         $success = $True;
-        $auditMessage = "for person " + $p.DisplayName + " DPIA100 successfully";   
+        $auditMessage = "for person " + $p.DisplayName + " DPIA100 successfully ";   
     }
     Catch{
         $auditMessage = "for person " + $p.DisplayName + " DPIA100 failed";
@@ -48,15 +50,17 @@ if(-Not($dryRun -eq $False)) {
 #build up result
 $result = [PSCustomObject]@{ 
 	Success= $success;
+	AccountReference= $account_guid;
 	AuditDetails=$auditMessage;
-    AccountReference= $aRef;
     Account = $account;
-    
-    # Optionally update the data for use in other systems
+
+    # Optionally return data for use in other systems
     ExportData = [PSCustomObject]@{
         displayName = $account.DisplayName;
         userName = $account.UserName;
+        externalId = $account_guid;
     };
 };
 
-Write-Output $result | ConvertTo-Json -Depth 10;
+#send result back
+Write-Output $result | ConvertTo-Json -Depth 10

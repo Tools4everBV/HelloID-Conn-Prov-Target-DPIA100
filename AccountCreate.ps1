@@ -15,6 +15,7 @@ $account = [PSCustomObject]@{
 $User = "<Beaufort user>"
 $CurrentDate = Get-Date -Format ddMMyyyy
 $DatForFile = Get-Date -Format ddMMyyy_Hmm
+$ProductionTypeDate = Get-Date -Format MMyyyy
 $OutFile = "C:\DPIA100_Export_HelloID\dpia100_siza_helloid_" + $DatForFile + ".txt"
 
 #Building fixed length fields
@@ -23,7 +24,8 @@ $Indication= "V $(" " * 1)".Substring(0,1) # V for Variable S for Stam
 $ExportDate = "$CurrentDate $(" " * 11)".Substring(0,11)
 $StartDate = "$CurrentDate $(" " * 11)".Substring(0,11)
 $creationUser = "$User $(" " * 16)".Substring(0,16)
-
+$ProductionType = "NOR$ProductionTypeDate $(" " * 9)".Substring(0,9)
+$Spaces = "$(" " * 30)".Substring(0,30)
 
 #Input Variables from HelloID
 $userExternalID = $p.externalId
@@ -35,7 +37,7 @@ $Value = "$userMail $(" " * 50)".Substring(0,50)
 if(-Not($dryRun -eq $True)) {
     #Export DPIA100
     Try{
-        $output = "$Processcode" + "$Rubriekscode" + "$Object_id" + "$Indication" + "$ExportDate" + "$creationUser" + "$Value" + "$StartDate"
+        $output = "$Processcode" + "$Rubriekscode" + "$Object_id" + "$Indication" + "$ExportDate" + "$creationUser" + "$Value" + "$StartDate" + "$Spaces" + "$ProductionType"
         Write-Output $output | Out-File $OutFile;    
         $success = $True;
         $auditMessage = "for person " + $p.DisplayName + " DPIA100 successfully ";   
