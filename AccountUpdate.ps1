@@ -20,7 +20,7 @@ $OutFile = "C:\DPIA100_Export_HelloID\dpia100_siza_helloid_" + $DatForFile + ".t
 
 #Building fixed length fields
 $Processcode = "IMP $(" " * 3)".Substring(0,3)
-$Indication= "V $(" " * 1)".Substring(0,1) # V for Variable S for Stam
+$Indication= "S $(" " * 1)".Substring(0,1) # V for Variable S for Stam
 $ExportDate = "$CurrentDate $(" " * 11)".Substring(0,11)
 $StartDate = "$CurrentDate $(" " * 11)".Substring(0,11)
 $creationUser = "$User $(" " * 16)".Substring(0,16)
