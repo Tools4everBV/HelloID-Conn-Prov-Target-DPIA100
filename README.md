@@ -7,3 +7,6 @@ This version is created for export only rubriekcode P01035 (emailaddress work)
 
 Please setup the connector following the DPIA100 requirements of the customer. 
 You can choose between an export per day, or a DPIA100 export per person.
+
+# HelloID Docs
+The official HelloID documentation can be found at: https://docs.helloid.com/
