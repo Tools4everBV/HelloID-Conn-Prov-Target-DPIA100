@@ -16,6 +16,7 @@ $path = $config.dpia100.path
 $prefix = $config.dpia100.fileprefix
 $personFileMode = [System.Convert]::ToBoolean($config.dpia100.personfile)
 $stam = $config.dpia100.stam
+$processcode = $config.dpia100.procescode
 
 if ($personFileMode) {
     $suffix = $account.externalId
@@ -28,7 +29,7 @@ $currentDate = Get-Date -Format ddMMyyyy
 $productionTypeDate = Get-Date -Format MMyyyy
 
 #Building fixed length fields
-$processcode = "IMP $(" " * 3)".Substring(0,3)
+$processcode = "$processcode $(" " * 3)".Substring(0,3)
 $indication= "$stam $(" " * 1)".Substring(0,1) # V for Variable S for Stam
 $exportDate = "$currentDate $(" " * 11)".Substring(0,11)
 $startDate = "$currentDate $(" " * 11)".Substring(0,11)
