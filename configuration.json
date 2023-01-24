@@ -1,75 +1,85 @@
 [
-    {
-      "key": "dpia100.personfile",
-      "type": "radio",
-      "defaultValue": "true",
-      "templateOptions": {
-        "label": "DPIA100 Export format",
-        "options": [
-          {
-            "value": "true",
-            "label": "One file per person"
-          },
-          {
-            "value": "false",
-            "label": "Daily file"
-          }
-        ]
-      }
-    },
-    {
-      "key": "dpia100.path",
-      "type": "input",
-      "defaultValue": "\\\\server\\Beaufort\\INTRACOM\\ONTVANG",
-      "templateOptions": {
-        "label": "DPIA100 Path",
-        "placeholder": "\\\\server\\Beaufort\\INTRACOM\\ONTVANG",
-        "description": "",
-        "required": true
-      }
-    },
-    {
-      "key": "dpia100.fileprefix",
-      "type": "input",
-      "defaultValue": "DPIA100-",
-      "templateOptions": {
-        "label": "DPIA100 File prefix",
-        "placeholder": "DPIA100-",
-        "description": "",
-        "required": true
-      }
-    },
-    {
-      "key": "dpia100.creatiegebruiker",
-      "type": "input",
-      "defaultValue": "Batstart",
-      "templateOptions": {
-        "label": "DPIA100 Creatiegebruiker",
-        "placeholder": "Batstart",
-        "description": "",
-        "required": true
-      }
-    },
-    {
-      "key": "dpia100.procescode",
-      "type": "input",
-      "defaultValue": "MAI",
-      "templateOptions": {
-        "label": "DPIA100 Procescode",
-        "placeholder": "MAI",
-        "description": "",
-        "required": true
-      }
-    },
-    {
-      "key": "dpia100.stam",
-      "type": "input",
-      "defaultValue": "S",
-      "templateOptions": {
-        "label": "DPIA100 Stam",
-        "placeholder": "S",
-        "description": "",
-        "required": true
-      }
+  {
+    "key": "useSingleFilePerPerson",
+    "type": "radio",
+    "defaultValue": "true",
+    "templateOptions": {
+      "label": "DPIA100 Export format",
+      "options": [
+        {
+          "value": "true",
+          "label": "Single file per person"
+        },
+        {
+          "value": "false",
+          "label": "Daily file"
+        }
+      ]
     }
-  ]
+  },
+  {
+    "key": "filePath",
+    "type": "input",
+    "defaultValue": "\\\\server\\Beaufort\\T4E_Export",
+    "templateOptions": {
+      "label": "DPIA100 Path",
+      "placeholder": "\\\\server\\Beaufort\\T4E_Export",
+      "description": "",
+      "required": true
+    }
+  },
+  {
+    "key": "filenamePrefix",
+    "type": "input",
+    "defaultValue": "DPIA100-",
+    "templateOptions": {
+      "label": "DPIA100 filename prefix",
+      "placeholder": "DPIA100-",
+      "description": "",
+      "required": true
+    }
+  },
+  {
+    "key": "updateUser",
+    "type": "input",
+    "defaultValue": "Tools4ever",
+    "templateOptions": {
+      "label": "DPIA100 update user",
+      "placeholder": "Tools4ever",
+      "description": "",
+      "required": true
+    }
+  },
+  {
+    "key": "processCode",
+    "type": "input",
+    "defaultValue": "IAM",
+    "templateOptions": {
+      "label": "DPIA100 process code",
+      "placeholder": "IAM",
+      "description": "",
+      "required": true
+    }
+  },
+  {
+    "key": "indication",
+    "type": "input",
+    "defaultValue": "S",
+    "templateOptions": {
+      "label": "DPIA100 indication",
+      "placeholder": "S",
+      "description": "V for Variable S for Stam",
+      "required": true
+    }
+  },
+  {
+    "key": "isDebug",
+    "type": "checkbox",
+    "defaultValue": false,
+    "templateOptions": {
+      "label": "Toggle debug logging",
+      "description": "When toggled, debug logging will be displayed for PowerShell actions such as Check on External Systems and Post Actions.",
+      "required": false
+    }
+  }
+]

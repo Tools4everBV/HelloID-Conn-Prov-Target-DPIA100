@@ -1,78 +1,149 @@
-#Initialize default properties
+#####################################################
+# HelloID-Conn-Prov-Target-Raet-DPIA100-Create
+#
+# Version: 1.1.0
+#####################################################
+# Initialize default values
+$c = $configuration | ConvertFrom-Json
 $p = $person | ConvertFrom-Json
-$success = $False;
-$auditMessage = "for person " + $p.DisplayName
-$config = $configuration | ConvertFrom-Json
+$success = $false # Set to false at start, at the end, only when no error occurs it is set to true
+$auditLogs = [System.Collections.Generic.List[PSCustomObject]]::new()
 
-#Change mapping here
+# Set debug logging
+switch ($($c.isDebug)) {
+    $true { $VerbosePreference = 'Continue' }
+    $false { $VerbosePreference = 'SilentlyContinue' }
+}
+$InformationPreference = "Continue"
+$WarningPreference = "Continue"
+
+# used to define for export file
+$useSingleFilePerPerson = [System.Convert]::ToBoolean($c.useSingleFilePerPerson)
+$filePath = $c.filePath
+$filenamePrefix = $c.filenamePrefix
+$updateUser = $c.updateUser
+$processCode = $c.processCode
+$indication = $c.indication
+
+#region Change mapping here
+$currentDate = Get-Date
+
+if ($useSingleFilePerPerson -eq $true) {
+    $fileName = "$($filenamePrefix)" + "$($p.ExternalId)" + ".txt"
+}
+else {
+    $fileName = "$($filenamePrefix)" + "$($currentDate.toString("yyyyMMdd"))" + ".txt"
+}
+
 $account = [PSCustomObject]@{
-    externalId = $p.ExternalId
-    mail = $p.Accounts.MicrosoftActiveDirectory.mail
+    'objectId'   = $p.ExternalId
+    'filePath'   = "$($filePath)\$($fileName)"
+    'properties' = [PSCustomObject]@{
+        # Business Email address
+        'P01035' = $p.Accounts.MicrosoftActiveDirectory.mail
+        # Login name
+        'E02544' = $p.Accounts.MicrosoftActiveDirectory.samAccountName
+        # Identity (for Youforce SSO)
+        'E02850' = $p.Accounts.MicrosoftActiveDirectory.userPrincipalName
+    }
 }
 
-#Default variables for export
-$user = $config.dpia100.creatiegebruiker
-$path = $config.dpia100.path
-$prefix = $config.dpia100.fileprefix
-$personFileMode = [System.Convert]::ToBoolean($config.dpia100.personfile)
-$stam = $config.dpia100.stam
-$processcode = $config.dpia100.procescode
+$aRef = $account.objectId
+#endregion Change mapping here
 
-if ($personFileMode) {
-    $suffix = $account.externalId
-} else {
-    $suffix = Get-Date -Format ddMMyyy
-}
-$outFile = $path + "\" + $prefix + $suffix + ".txt"
+# Troubleshooting
+# $account = [PSCustomObject]@{
+#     'objectId'   = '12345678'
+#     'filePath'   = "$($filePath)\$($fileName)"
+#     'properties' = [PSCustomObject]@{
+#         # Business Email address
+#         'P01035' = 'j.doe@enyoi.nl'
+#         # Login name
+#         'E02544' = 'j.doe'
+#         # Identity (for Youforce SSO)
+#         'E02850' = '12345678@enyoi.nl'
+#     }
+# }
+# $dryRun = $false
 
-$currentDate = Get-Date -Format ddMMyyyy
-$productionTypeDate = Get-Date -Format MMyyyy
+try {
+    # Build fixed length fields
+    $processCode = "$processCode $(" " * 3)".Substring(0, 3)
+    $objectId = "$($account.objectId) $(" " * 50)".Substring(0, 50)
+    $indication = "$indication $(" " * 1)".Substring(0, 1) # V for Variable S for Stam
+    $exportDate = "$($currentDate.toString("ddMMyyyy")) $(" " * 11)".Substring(0, 11)
+    $startDate = "$($currentDate.toString("ddMMyyyy")) $(" " * 11)".Substring(0, 11)
+    $creationUser = "$updateUser $(" " * 16)".Substring(0, 16)
+    $productionType = "NOR$($currentDate.toString("MMyyyy")) $(" " * 9)".Substring(0, 9)
+    $spaces = "$(" " * 30)".Substring(0, 30)
 
-#Building fixed length fields
-$processcode = "$processcode $(" " * 3)".Substring(0,3)
-$indication= "$stam $(" " * 1)".Substring(0,1) # V for Variable S for Stam
-$exportDate = "$currentDate $(" " * 11)".Substring(0,11)
-$startDate = "$currentDate $(" " * 11)".Substring(0,11)
-$creationUser = "$user $(" " * 16)".Substring(0,16)
-$productionType = "NOR$productionTypeDate $(" " * 9)".Substring(0,9)
-$spaces = "$(" " * 30)".Substring(0,30)
+    # Export data to file
+    try {
+        foreach ($property in $account.properties.PSObject.Properties) {
+            if (-Not($dryRun -eq $True)) {
+                $rubrieksCode = "$($property.Name) $(" " * 6)".Substring(0, 6)
+                $value = "$($property.Value) $(" " * 50)".Substring(0, 50)
 
-#Input Variables from HelloID
-$objectId = "$($account.externalId) $(" " * 50)".Substring(0,50)
-$rubrieksCode = "P01035 $(" " * 6)".Substring(0,6)
-$value = "$($account.mail) $(" " * 50)".Substring(0,50)
+                $fileContent = "$processcode" + "$rubriekscode" + "$objectId" + "$indication" + "$exportDate" + "$creationUser" + "$value" + "$startDate" + "$spaces" + "$productionType"
 
-$output = "$processcode" + "$rubriekscode" + "$objectId" + "$indication" + "$exportDate" + "$creationUser" + "$value" + "$startDate" + "$spaces" + "$productionType"
+                Write-Verbose "Exporting rubriek '$($rubrieksCode)' to DPIA100 file '$($account.filePath)'. File content: $($fileContent|ConvertTo-Json)"
 
-if(-Not($dryRun -eq $True)) {
-    #Export DPIA100
-    Try{
-        if ($personFileMode) {
-            Write-Output $output | Out-File $OutFile -Encoding ascii
-        } else {
-            Write-Output $output | Out-File $OutFile -Encoding ascii -Append
+                $fileContent | Out-File -FilePath $account.filePath -Encoding UTF8 -Force -Confirm:$false -Append
+
+                $auditLogs.Add([PSCustomObject]@{
+                        Message = "Successfully exported rubriek '$($rubrieksCode)' to DPIA100 file '$($account.filePath)'"
+                        IsError = $false
+                    })
+            }
+            else {
+                Write-Warning "DryRun: Would export rubriek '$($rubrieksCode)' to DPIA100 file '$($account.filePath)'. File content: $($fileContent|ConvertTo-Json)"
+            }
         }
-        $success = $True
-        $auditMessage = "for person " + $p.DisplayName + " DPIA100 successfully to $outFile"
     }
-    Catch{
-        $auditMessage = "for person " + $p.DisplayName + " DPIA100 failed to $outFile $_"
+    catch {
+        # Clean up error variables
+        $verboseErrorMessage = $null
+        $auditErrorMessage = $null
+
+        $ex = $PSItem
+        # If error message empty, fall back on $ex.Exception.Message
+        if ([String]::IsNullOrEmpty($verboseErrorMessage)) {
+            $verboseErrorMessage = $ex.Exception.Message
+        }
+        if ([String]::IsNullOrEmpty($auditErrorMessage)) {
+            $auditErrorMessage = $ex.Exception.Message
+        }
+
+        Write-Verbose "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($verboseErrorMessage)"
+
+        $auditLogs.Add([PSCustomObject]@{
+                Message = "Error exporting rubriek '$($rubrieksCode)' to DPIA100 file '$($account.filePath)'. File content: $($fileContent|ConvertTo-Json). Error Message: $auditErrorMessage"
+                IsError = $True
+            })
     }
-} else {
-    Write-Verbose -Verbose "Dry mode: $output"
 }
+finally {
+    # Check if auditLogs contains errors, if no errors are found, set success to true
+    if (-NOT($auditLogs.IsError -contains $true)) {
+        $success = $true
+    }
 
+    # Dynamically build ExportDate based on defined properties
+    $exportData = [PSCustomObject]::new()
+    foreach ($property in $account.properties.PSObject.Properties) {
+        $exportData | Add-Member -MemberType NoteProperty -Name "$($property.Name)" -Value "$($property.Value)" -Force
+    }
 
-#build up result
-$result = [PSCustomObject]@{ 
-	Success = $success
-	AccountReference = $account.externalId
-	AuditDetails = $auditMessage
-    Account = $account
+    # Send results
+    $result = [PSCustomObject]@{
+        Success          = $success
+        AccountReference = $aRef
+        AuditLogs        = $auditLogs
+        Account          = $account
 
-    # Optionally return data for use in other systems
-    ExportData = [PSCustomObject]@{}
-};
+        # Optionally return data for use in other systems
+        ExportData       = $exportData
+    }
 
-#send result back
-Write-Output $result | ConvertTo-Json -Depth 10
+    Write-Output ($result | ConvertTo-Json -Depth 10)
+}
