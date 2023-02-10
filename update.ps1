@@ -120,7 +120,7 @@ try {
 
                     Write-Verbose "Exporting rubriek '$($rubrieksCode)' to DPIA100 file '$($account.filePath)'. File content: $($fileContent|ConvertTo-Json)"
 
-                    $fileContent | Out-File -FilePath $account.filePath -Encoding UTF8 -Force -Confirm:$false -Append
+                    $fileContent | Out-File -FilePath $account.filePath -Encoding ascii -Force -Confirm:$false -Append
 
                     $auditLogs.Add([PSCustomObject]@{
                             Message = "Successfully exported rubriek '$($rubrieksCode)' to DPIA100 file '$($account.filePath)'"
